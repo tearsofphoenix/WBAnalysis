@@ -1,0 +1,17 @@
+{
+  "name": "weiboevents-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "antd": "^3.5.0",
+    "file-saver": "^1.3.8",
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2",
+    "request": "^2.85.0"
+  },
+  "author": {
+    "name": "PKUVIS (Donghao Ren, Xin Zhang, Zhenhuang Wang, Jing Li, and Xiaoru Yuan)"
+  },
+  "license": "MIT"
+}

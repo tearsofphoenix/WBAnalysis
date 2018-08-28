@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>WeiboEvents</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script type="text/javascript" src="dist/libraries.js"></script>
+    <link rel="stylesheet" type="text/css" class="colorscheme-css" href="dist/weiboevents-white.css" href-w="dist/weiboevents-white.css" href-b="dist/weiboevents-black.css"/>
+    <link rel="stylesheet" type="text/css" class="colorscheme-css" href="dist/iconfont.css" />
+</head>
+<body>
+
+<div id="toolbar">
+ <div class="button-group" data-set="layout">
+  <span class="button" data-value="sail-span" data-tooltip="帆状视图"><i class="xicon-tools-sail"></i></span>
+  <span class="button" data-value="tree" data-tooltip="树状视图"><i class="xicon-tools-tree"></i></span>
+  <span class="button" data-value="circular" data-tooltip="圆环视图"><i class="xicon-tools-circular"></i></span>
+  <span class="button" data-value="curves" data-tooltip="曲线视图"><i class="xicon-tools-curves"></i></span>
+ </div>
+ <div class="button-group" data-set="action">
+  <span class="button" data-value="zoom" data-tooltip="放大特定区域"><i class="xicon-tools-zooming"></i></span>
+  <span class="button" data-value="pan" data-tooltip="平移视图"><i class="xicon-tools-move"></i></span>
+ </div>
+ <span class="button" data-raise="zoom-in" data-tooltip="放大"><i class="xicon-tools-zoom-in"></i></span>
+ <span class="button" data-raise="zoom-out" data-tooltip="缩小"><i class="xicon-tools-zoom-out"></i></span>
+ <span class="button" data-raise="restore-zooming" data-tooltip="上一个视图"><i class="xicon-tools-undo"></i></span>
+ <span class="button" data-raise="reset-zooming" data-tooltip="复位视图"><i class="xicon-tools-reset"></i></span>
+ <span class="button" data-toggle="full-selection" data-tooltip="显示所有选中的微博"><i class="xicon-tools-multiple"></i></span>
+ <span class="button" data-raise="clear-selection" data-tooltip="取消选择"><i class="xicon-tools-cross"></i></span>
+
+
+ <span class="button" id="btn-paint" data-tooltip="显示/隐藏标注面板" onclick="$(this).toggleClass('active'); $('#graph-sketchpad .toolbox').toggle();">标注</span>
+
+ <div class="button-group" data-set="colorscheme">
+  <span class="button" data-value="white" data-tooltip="白底黑字">白</span>
+  <span class="button" data-value="black" data-tooltip="黑底白字">黑</span>
+ </div>
+ <span class="button" onclick="window.open('http://vis.pku.edu.cn/weibova/weiboevents/manual.html');">帮助</span>
+</div>
+
+<div id="graph">
+ <div id="graph-inner">
+  <canvas id="canvas-graph"></canvas>
+  <canvas id="canvas-graph-nodes"></canvas>
+  <canvas id="canvas-graph-previous-statistics"></canvas>
+  <canvas id="canvas-graph-overlay"></canvas>
+  <canvas id="canvas-graph-over-lines"></canvas>
+  <canvas id="canvas-graph-over"></canvas>
+  <div id="graph-texts" class="hide"></div>
+ </div>
+ <div id="graph-sketchpad"></div>
+</div>
+
+<div id="timeline" class="pkuvis-timeline">
+    <span class="set-height">100</span>
+    <span class="set-colorscheme">black</span>
+    <span class="-enable-yticks"></span>
+    <!--<span class="disable-track-range"></span>-->
+</div>
+
+<div id="right-box">
+  <div class="scrollview">
+    <div id="right-box-inner">
+     <h2>节点大小</h2>
+     <div class="button-group" data-set="node-size">
+      <span class="button" data-value="retweets" data-tooltip="节点大小: 由转发数决定">转发数</span>
+      <span class="button" data-value="followers" data-tooltip="节点大小: 由作者粉丝数决定">粉丝数</span>
+      <span class="button" data-value="comments" data-tooltip="节点大小: 由评论数决定">评论数</span>
+      <span class="button" data-value="uniform" data-tooltip="节点大小: 统一大小">统一</span>
+     </div>
+     <br />
+     <div class="slider-bar">
+      <div class="control-left-text">节点大小</div>
+      <div id="ctrl-node-size" class="pkuvis-slider pkuvis-slider-center" style="width:120px;"></div>
+      <span id="ctrl-node-size-value">1.00x</span>
+     </div>
+     <h2>节点颜色</h2>
+     <div class="button-group" data-set="node-color">
+      <span class="button" data-value="uniform" data-tooltip="节点颜色: 统一">统一</span>
+      <span class="button" data-value="gender" data-tooltip="节点颜色: 性别">性别</span>
+      <span class="button" data-value="verified" data-tooltip="节点颜色: 是否为 VIP">VIP</span>
+      <span class="button" data-value="level" data-tooltip="节点颜色: 转发层级">层级</span>
+     </div>
+     <br />
+     <h2>圆环视图参数</h2>
+     <div class="slider-bar">
+      <div class="control-left-text">展开阈值</div>
+      <div id="ctrl-expand-threshold" class="pkuvis-slider pkuvis-slider-center" style="width:120px;"></div>
+      <span id="ctrl-expand-threshold-value">50</span>
+     </div>
+     <h2>帆状视图参数</h2>
+     <div class="button-group" data-set="x-axis">
+      <span class="button-t control-left-text">时间映射</span>
+      <span class="button" data-value="linear" data-tooltip="帆状视图的横轴: 线性时间">线性</span>
+      <span class="button" data-value="nonlinear" data-tooltip="帆状视图的横轴: 根据微博密度伸缩">伸缩</span>
+     </div>
+     <h2>微博过滤</h2>
+     <div class="slider-bar distribution">
+      <div class="control-left-text">粉丝数</div>
+      <div id="ctrl-filter-followers" class="pkuvis-slider distribution" style="width:120px;"></div>
+      <span id="ctrl-filter-followers-value">>= 0</span>
+     </div>
+     <div class="slider-bar distribution">
+      <div class="control-left-text">转发数</div>
+      <div id="ctrl-filter-reposts" class="pkuvis-slider distribution" style="width:120px;"></div>
+      <span id="ctrl-filter-reposts-value">>= 0</span>
+     </div>
+     <div class="slider-bar distribution" id="filter-bottom">
+      <div class="control-left-text">长度</div>
+      <div id="ctrl-filter-text-length" class="pkuvis-slider distribution" style="width:120px;"></div>
+      <span id="ctrl-filter-text-length-value">>= 0</span>
+     </div>
+
+     <h2>关键词</h2>
+     <div id="word-cloud">
+      <div id="word-cloud-words"></div>
+      <div id="word-cloud-mywords"></div>
+      <div class="input">
+        关键词：
+        <input id="input-keyword-selection" type="text"  data-tooltip="输入自定义关键词按回车即可添加" />
+        <span class="cancel word"  data-tooltip="取消选中的关键词">取消</span>
+      </div>
+     </div>
+     <h2>统计信息</h2>
+     <p>当前用户: @<span id="login-status">unknown</span></p>
+     <p class="basic-stat"></p>
+     <span class="button" data-raise="open-custom-chart-box">自定义图表</span>
+     <div id="charts">
+     </div>
+
+     <h2>用户列表</h2>
+     <div id="rightlist">
+       <div class="scrollview">
+         <div>
+           <div id="rightlist-listpos"></div>
+           <div id="rightlist-users">
+               <div id="user-lists">
+                 <div id="user-myfriends"></div>
+                 <div id="user-list"></div>
+               </div>
+           </div>
+         </div>
+         <div class="scrollview-mask-top"></div>
+         <div class="scrollview-mask-bottom"></div>
+       </div>
+     </div>
+
+     <h2>关于 WeiboEvents</h2>
+     <p>项目团队:
+        导师:
+        <a href="http://vis.pku.edu.cn/yuanxiaoru/" target="_blank">袁晓如</a>,
+        学生:
+        <a href="http://donghaoren.org/" target="_blank">任东昊</a>,
+        <a href="http://vis.pku.edu.cn/people/xinzhang/" target="_blank">张昕</a>,
+        <a href="http://vis.pku.edu.cn/people/zhenhuangwang/" target="_blank">王臻皇</a>,
+        <a href="http://vis.pku.edu.cn/people/jingli/" target="_blank">李菁</a>,
+        张博
+     </p>
+     <p><a href="http://vis.pku.edu.cn/" target="_blank">北京大学可视化与可视分析组</a></p>
+     <p><img src="pkuvis-logo.png" style="width: 100px" /></p>
+     <p>Copyright 2012-2018, Peking University, All rights reserved.</p>
+
+    </div><!-- right-box-inner -->
+  </div>
+</div>
+
+<div id="initial-load-status">
+    <div class="text load-status-300">
+        Initializing...<div class="progress"></div>
+    </div>
+</div>
+
+<script type="text/plain" id="custom-chart-box">
+  <h2>自定义统计图</h2>
+  <p>这是一个比较复杂的功能，目前处于试验阶段，如果您有建议欢迎提出。</p>
+  <p>请输入统计代码，语言为 Javascript。详细说明请<a href="#">点击这里</a>。</p>
+  <p><textarea for="code" class="pre" onkeydown="event.stopPropagation();" style="height: 300px;">
+function(fx, tweets) {
+  // 这里可以写一段 Javascript 代码，用自定义的算法计算统计信息然后绘图。
+  // 下面是一个例子，我们想显示男女用户的平均粉丝数(VIP单独计算)。
+  // 生成一个数组，每个元素表示用户的性别
+  var names = ["Male", "Female", "VIP", "unknown"];
+  var classes = ["m", "f", "v", "n"];
+  var get_class = function(tweet) {
+    if(tweet.verified) return "v";
+    if(tweet.gender == "m" || tweet.gender == "f") return tweet.gender;
+    return "n";
+  };
+  var data = classes;
+  var weights = classes.map(function(c) {
+    var c_tweets = tweets.filter(function(t) { return get_class(t) == c; });
+    if(c_tweets.length == 0) return 0;
+    return fx.mean(c_tweets, fx.$pick("followers_count"));
+  });
+  // 如有需要，可以打印调试信息。
+  fx.print("微博总数: " + tweets.length);
+  // 调用 draw 函数生成图表，多次调用可生成多个。
+  fx.chart({
+    title: "My Custom Chart",  // 标题
+    type: "bars",              // 类型，这里使用条形图
+    names: names,              // 每一条的显示名称
+    values: classes,           // 每一条的内部名称
+    data: data,                // 数据项
+    weights: weights           // 数据项的权重(可选参数，默认全1)
+  });
+}
+</textarea></p>
+  <p>
+    <span class="button" for="submit">绘图</span>
+    <span class="button" for="cancel">取消</span>
+  </p>
+  <p for="graph-area"></p>
+  <pre for="print" style="font-size: 11px"></pre>
+</script>
+
+<script type="text/plain" id="submit-box">
+  <h2>保存 / 分享您的作品</h2>
+  <p>如需存储图片，请点击“打开图片”按钮，然后将出现的图片另存为即可。</p>
+  <p><span class="button toggle-button active" onclick="$(this).toggleClass('active');" for="post-weibo"><i class="xicon-tools-nomark"></i><i class="xicon-tools-mark"></i> 同时发微博</span></p>
+  <p>
+      <textarea for="text" onkeydown="event.stopPropagation();">我正在使用#北京大学PKUVIS微博事件可视分析#，你也来试试！http://vis.pku.edu.cn/weibova/weiboevents</textarea>
+  </p>
+  <p>
+      <span class="button" for="submit-submit">保存作品</span>
+      <span class="button" for="submit-save-image">打开图片</span>
+      <span class="button" for="submit-cancel">取消</span>
+  </p>
+  <p>提示：您可以在本工具首页进入“我的内容”查看并打开您之前上传的内容。</p>
+  <p>保存您的作品即表示您允许 PKUVIS 组将其用于研究用途。</p>
+
+  <p>如果您在研究中使用本工具，请引用如下文献：</p>
+  <p class="publication">
+  <em><b>WeiboEvents: A Crowd Sourcing Weibo Visual Analytic System</b></em><br>
+  Ren, Donghao and Zhang, Xin and Wang, Zhenhuang and Li, Jing and Yuan, Xiaoru<br>
+  <em>IEEE Pacific Visualization Symposium (PacificVis 2014), Visualization Notes</em>,
+  Yokohama, Japan,
+  2014, <a href="http://vis.pku.edu.cn/research/publication/weiboevents.pdf">PDF</a>
+  </p>
+
+  <p>欢迎填写我们的<a href="{{ref:suggestions.html}}" target="_blank">调查问卷</a></p>
+
+  <p for="info"></p>
+
+  <p><img id="submit-image" /></p>
+</script>
+<script type="text/plain" id="suggestion-box">
+  <h2>给我们提建议</h2>
+  <p>如果想要改进或增加功能，或者有其他建议，请写在这里。如果您希望得到反馈，请写下联系方式。</p>
+  <p><textarea for="text" onkeydown="event.stopPropagation();" style="height: 300px;"></textarea></p>
+  <p>
+    <span class="button" for="submit">提交建议</span>
+    <span class="button" for="cancel">取消</span>
+  </p>
+  <p for="info"></p>
+</script>
+
+<div id="help-box">
+  <canvas id="help-bg"></canvas>
+  <div id="help-content-w">
+    <span class="button" id="help-close" onclick="help_close();">✕</span>
+    <div id="help-content">
+    </div>
+    <div id="help-controls" style="display:none;">
+     <span id="sp-help-info"></span>
+     <span class="button" id="btn-help-next" onclick="help_next()">-></span>
+    </div>
+  </div>
+</div>
+
+<div id="popup-container">
+  <div>
+    <div class="scrollview">
+      <div class="popup-contents"></div>
+      <div class="scrollview-mask-top"></div>
+      <div class="scrollview-mask-bottom"></div>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip-container"></div>
+
+<script type="text/javascript">
+$(".button-group").each(function() {
+  $(this).contents().filter(function() { return this.nodeType == 3; }).remove();
+});
+window.onmessage = (msg) => {
+  let dataset = msg.data.dataset;
+  SYSTEM_INITIALIZE(dataset.data, dataset.fields);
+};
+</script>
+<script type="text/javascript" src="dist/weiboevents.js"></script>
+</body>
+</html>
